@@ -49,6 +49,12 @@ docker compose logs -f app worker
 docker compose down -v
 ```
 
+## CI/CD
+
+Workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) запускает сборку Docker-контейнеров, PHPStan, PHP CS Fixer, загрузку и проверку fixtures для `products`, `product_attributes` и `product_images`, backend PHPUnit-тесты, сборку frontend и Playwright e2e-тесты.
+
+Production deploy находится в [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) и запускается вручную через **Actions -> Deploy -> Run workflow**. Перед запуском в GitHub Environment `production` задайте secrets `SERVER_HOST`, `SERVER_USER`, `SERVER_PATH`, `SSH_PRIVATE_KEY`, `SERVER_KNOWN_HOSTS`; `SERVER_PORT` можно задать как secret, а `HEALTHCHECK_URL` как variable. Deploy сначала вызывает CI и продолжает только после успешного прохождения всех проверок.
+
 ## Основные страницы
 
 - Каталог товаров: http://localhost/products
