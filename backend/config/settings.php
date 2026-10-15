@@ -21,6 +21,12 @@ preg_match('/dbname=([^;]+)/', $dbDsn, $nameMatch);
 
 return [
     'app_env' => (string) $env('APP_ENV', 'dev'),
+    'auth' => [
+        'jwt_secret' => (string) $env('JWT_SECRET', 'change-this-local-jwt-secret'),
+        'jwt_issuer' => (string) $env('JWT_ISSUER', 'sharp-robot-task'),
+        'username' => (string) $env('AUTH_USERNAME', 'admin'),
+        'password' => (string) $env('AUTH_PASSWORD', 'admin'),
+    ],
     'db' => [
         'dsn' => $dbDsn,
         'user' => (string) $env('DB_USER', 'products'),

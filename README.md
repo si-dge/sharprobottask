@@ -19,7 +19,8 @@ docker compose version
 Из корня проекта:
 
 ```bash
-docker compose up --build -d
+./build.sh
+./setup.sh
 ```
 
 После запуска:
@@ -39,7 +40,7 @@ docker compose logs -f app worker
 Остановить приложение:
 
 ```bash
-docker compose down
+./shutdown.sh
 ```
 
 Остановить приложение и удалить данные PostgreSQL:
@@ -57,6 +58,7 @@ docker compose down -v
 ## API
 
 - `GET /api/health` - проверка API
+- `POST /api/login` - получение JWT (`admin` / `admin` по умолчанию для локального запуска)
 - `GET /api/products` - список товаров
 - `GET /api/products/{id}` - карточка товара
 - `POST /api/imports` - загрузка XLSX в очередь импорта
@@ -68,8 +70,13 @@ docker compose down -v
 
 ```bash
 curl http://localhost/api/health
+curl -X POST http://localhost:8080/api/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin"}'
 curl 'http://localhost:8080/api/products?page=1&limit=20'
 ```
+
+Все API-маршруты, кроме `/api/health` и `/api/login`, защищены JWT. Передавайте токен в заголовке `Authorization: Bearer <token>`. Для Docker задайте `JWT_SECRET`, `AUTH_USERNAME` и `AUTH_PASSWORD` через `.env`.
 
 ## Swagger / OpenAPI
 

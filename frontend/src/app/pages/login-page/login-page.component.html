@@ -1,0 +1,41 @@
+<main class="login-page">
+  <section class="login-panel" aria-labelledby="login-title">
+    <p class="eyebrow">Sharp Robot Inventory</p>
+    <h1 id="login-title">Вход в каталог</h1>
+    <p class="login-description">Авторизуйтесь, чтобы управлять товарами и импортами.</p>
+
+    <div class="alert alert-info" *ngIf="sessionExpired">
+      Сессия завершилась. Войдите снова.
+    </div>
+    <div class="alert alert-danger" *ngIf="error" role="alert">{{ error }}</div>
+
+    <form (ngSubmit)="submit()" #loginForm="ngForm">
+      <div class="mb-3">
+        <label class="form-label" for="username">Логин</label>
+        <input
+          class="form-control form-control-lg"
+          id="username"
+          name="username"
+          [(ngModel)]="username"
+          autocomplete="username"
+          required
+        />
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="password">Пароль</label>
+        <input
+          class="form-control form-control-lg"
+          id="password"
+          name="password"
+          type="password"
+          [(ngModel)]="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+      <button class="btn btn-dark btn-lg w-100" type="submit" [disabled]="loginForm.invalid || loading">
+        {{ loading ? "Входим..." : "Войти" }}
+      </button>
+    </form>
+  </section>
+</main>

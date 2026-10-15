@@ -6,6 +6,7 @@ use App\Domain\ImageDownloadService;
 use App\Domain\KafkaQueueResetter;
 use App\Domain\ProductImportService;
 use App\Domain\XlsxImportService;
+use App\Action\LoginAction;
 use App\Repository\DatabaseResetRepository;
 use App\Repository\ImportRepository;
 use App\Repository\ProductRepository;
@@ -71,4 +72,5 @@ return (new ContainerBuilder())->addDefinitions([
     \App\Action\ShowImageAction::class => static fn (): \App\Action\ShowImageAction => new \App\Action\ShowImageAction(
         $settings['image_directory'],
     ),
+    LoginAction::class => static fn (): LoginAction => new LoginAction($settings['auth']),
 ])->build();

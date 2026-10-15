@@ -10,6 +10,7 @@ servers:
     description: Локальный API
 
 tags:
+  - name: Аутентификация
   - name: Состояние API
   - name: База данных
   - name: Товары
@@ -17,6 +18,27 @@ tags:
   - name: Worker
 
 paths:
+  /api/login:
+    post:
+      tags: [Аутентификация]
+      summary: Получить JWT
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: JWT-токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/health:
     get:
       tags: [Состояние API]
@@ -29,6 +51,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+
+  /api/logout:
+    post:
+      tags: [Аутентификация]
+      summary: Завершить сессию
+      operationId: logout
+      responses:
+        '200':
+          description: JWT-cookie удалена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
 
   /api/database/reset:
     post:
@@ -186,6 +221,11 @@ paths:
                 $ref: '#/components/schemas/WorkerTaskListResponse'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   parameters:
     Page:
       name: page
@@ -237,6 +277,12 @@ components:
         example: 50
 
   responses:
+    Unauthorized:
+      description: Требуется действующий JWT-токен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     NotFound:
       description: Ресурс не найден
       content:
@@ -245,6 +291,42 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      required: [token, tokenType, expiresIn, user]
+      properties:
+        token:
+          type: string
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          example: 3600
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+
+    LogoutResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: Logged out
+
     HealthResponse:
       type: object
       required: [status]

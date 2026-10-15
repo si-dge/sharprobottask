@@ -9,6 +9,10 @@ services:
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
       KAFKA_TOPIC: ${KAFKA_TOPIC:-imports}
       IMPORT_MAX_SIZE: ${IMPORT_MAX_SIZE:-52428800}
+      JWT_SECRET: ${JWT_SECRET:-change-this-local-jwt-secret}
+      JWT_ISSUER: ${JWT_ISSUER:-sharp-robot-task}
+      AUTH_USERNAME: ${AUTH_USERNAME:-admin}
+      AUTH_PASSWORD: ${AUTH_PASSWORD:-admin}
     volumes:
       - imports_data:/tmp/imports
       - ./import_example.xlsx:/import_example.xlsx:ro
@@ -26,6 +30,10 @@ services:
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
       KAFKA_TOPIC: ${KAFKA_TOPIC:-imports}
       IMPORT_MAX_SIZE: ${IMPORT_MAX_SIZE:-52428800}
+      JWT_SECRET: ${JWT_SECRET:-change-this-local-jwt-secret}
+      JWT_ISSUER: ${JWT_ISSUER:-sharp-robot-task}
+      AUTH_USERNAME: ${AUTH_USERNAME:-admin}
+      AUTH_PASSWORD: ${AUTH_PASSWORD:-admin}
     volumes:
       - imports_data:/tmp/imports
     depends_on:
