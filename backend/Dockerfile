@@ -4,7 +4,7 @@ COPY composer.json composer.lock ./
 RUN composer install --prefer-dist --no-interaction --no-progress \
     --ignore-platform-req=ext-pdo_pgsql --ignore-platform-req=ext-gd
 
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 RUN apk add --no-cache $PHPIZE_DEPS curl postgresql-dev libzip-dev oniguruma-dev icu-dev libxml2-dev \
         librdkafka-dev libpng-dev libjpeg-turbo-dev freetype-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
