@@ -1,16 +1,45 @@
 import { Routes } from "@angular/router";
-import { ImportPageComponent } from "./pages/import-page/import-page.component";
-import { ProductDetailPageComponent } from "./pages/product-detail-page/product-detail-page.component";
-import { ProductsPageComponent } from "./pages/products-page/products-page.component";
-import { WorkerTasksPageComponent } from "./pages/worker-tasks-page/worker-tasks-page.component";
-import { LoginPageComponent } from "./pages/login-page/login-page.component";
 import { authGuard } from "./auth.guard";
 
 export const routes: Routes = [
-	{ path: "login", component: LoginPageComponent },
+	{
+		path: "login",
+		loadComponent: () =>
+			import("./pages/login-page/login-page.component").then(
+				(module) => module.LoginPageComponent,
+			),
+	},
 	{ path: "", redirectTo: "products", pathMatch: "full" },
-	{ path: "import", component: ImportPageComponent, canActivate: [authGuard] },
-	{ path: "products", component: ProductsPageComponent, canActivate: [authGuard] },
-	{ path: "products/:id", component: ProductDetailPageComponent, canActivate: [authGuard] },
-	{ path: "worker-tasks", component: WorkerTasksPageComponent, canActivate: [authGuard] },
+	{
+		path: "import",
+		loadComponent: () =>
+			import("./pages/import-page/import-page.component").then(
+				(module) => module.ImportPageComponent,
+			),
+		canActivate: [authGuard],
+	},
+	{
+		path: "products",
+		loadComponent: () =>
+			import("./pages/products-page/products-page.component").then(
+				(module) => module.ProductsPageComponent,
+			),
+		canActivate: [authGuard],
+	},
+	{
+		path: "products/:id",
+		loadComponent: () =>
+			import("./pages/product-detail-page/product-detail-page.component").then(
+				(module) => module.ProductDetailPageComponent,
+			),
+		canActivate: [authGuard],
+	},
+	{
+		path: "worker-tasks",
+		loadComponent: () =>
+			import("./pages/worker-tasks-page/worker-tasks-page.component").then(
+				(module) => module.WorkerTasksPageComponent,
+			),
+		canActivate: [authGuard],
+	},
 ];
