@@ -1,0 +1,110 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Run CI before deploy
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    environment: production
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate deploy settings
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PATH: ${{ secrets.SERVER_PATH }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_KNOWN_HOSTS: ${{ secrets.SERVER_KNOWN_HOSTS }}
+        run: |
+          test -n "$SERVER_HOST" || { echo "Missing SERVER_HOST secret"; exit 1; }
+          test -n "$SERVER_USER" || { echo "Missing SERVER_USER secret"; exit 1; }
+          test -n "$SERVER_PATH" || { echo "Missing SERVER_PATH secret"; exit 1; }
+          test -n "$SSH_PRIVATE_KEY" || { echo "Missing SSH_PRIVATE_KEY secret"; exit 1; }
+          test -n "$SERVER_KNOWN_HOSTS" || { echo "Missing SERVER_KNOWN_HOSTS secret"; exit 1; }
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_KNOWN_HOSTS: ${{ secrets.SERVER_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SERVER_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Upload release
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PATH: ${{ secrets.SERVER_PATH }}
+        run: |
+          RELEASE_ROOT="/tmp/sharprobottask-${{ github.run_id }}-${{ github.run_attempt }}"
+          SSH="ssh -i ~/.ssh/deploy_key -p $SERVER_PORT $SERVER_USER@$SERVER_HOST"
+
+          $SSH "rm -rf '$RELEASE_ROOT' && mkdir -p '$RELEASE_ROOT'"
+          tar \
+            --exclude='./.git' \
+            --exclude='./.env' \
+            --exclude='./backend/.env' \
+            --exclude='./backend/vendor' \
+            --exclude='./frontend/node_modules' \
+            --exclude='./frontend/dist' \
+            --exclude='./backend/tests' \
+            -cf - . | $SSH "tar --no-same-owner --no-same-permissions --no-overwrite-dir -xf - -C '$RELEASE_ROOT'"
+
+          $SSH "SERVER_PATH='$SERVER_PATH' RELEASE_ROOT='$RELEASE_ROOT' bash -s" <<'REMOTE'
+          set -eu
+          case "$SERVER_PATH" in /*) ;; *) echo 'SERVER_PATH must be absolute' >&2; exit 1 ;; esac
+          test -s "$SERVER_PATH/.env" || { echo "Missing $SERVER_PATH/.env" >&2; exit 1; }
+          test -f "$RELEASE_ROOT/docker-compose.yml" || { echo 'Missing docker-compose.yml in release' >&2; exit 1; }
+          mkdir -p "$SERVER_PATH"
+          tar --exclude='./.env' -cf - -C "$RELEASE_ROOT" . | tar --no-same-owner --no-same-permissions --no-overwrite-dir -xf - -C "$SERVER_PATH"
+          rm -rf "$RELEASE_ROOT"
+          REMOTE
+
+      - name: Restart services and check health
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PATH: ${{ secrets.SERVER_PATH }}
+          HEALTHCHECK_URL: ${{ vars.HEALTHCHECK_URL || 'http://127.0.0.1/api/health' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SERVER_PORT" "$SERVER_USER@$SERVER_HOST" \
+            "SERVER_PATH='$SERVER_PATH' HEALTHCHECK_URL='$HEALTHCHECK_URL' bash -s" <<'REMOTE'
+          set -eu
+          cd "$SERVER_PATH"
+          if docker compose version >/dev/null 2>&1; then
+            COMPOSE=(docker compose)
+          elif command -v docker-compose >/dev/null 2>&1; then
+            COMPOSE=(docker-compose)
+          else
+            echo 'Docker Compose is not installed on the server' >&2
+            exit 1
+          fi
+          "${COMPOSE[@]}" up -d --build --remove-orphans
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error "$HEALTHCHECK_URL" >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          "${COMPOSE[@]}" ps
+          "${COMPOSE[@]}" logs --tail=100 app worker
+          exit 1
+          REMOTE

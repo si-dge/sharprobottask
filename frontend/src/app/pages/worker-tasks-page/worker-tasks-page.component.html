@@ -1,0 +1,72 @@
+<main class="container py-4">
+  <section class="p-4 mb-4 bg-dark text-white rounded-3">
+    <h1 class="display-6 mb-2">Задачи worker</h1>
+    <p class="lead mb-0">Состояние очереди импорта обновляется автоматически.</p>
+  </section>
+
+  <section class="card shadow-sm">
+    <div class="card-body">
+      <div class="row align-items-end g-3 mb-4">
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="task-status">Фильтр по статусу</label>
+          <select id="task-status" class="form-select" [(ngModel)]="selectedStatus">
+            <option value="all">Все задачи</option>
+            <option value="queued">В очереди</option>
+            <option value="processing">В работе</option>
+            <option value="completed">Завершено</option>
+            <option value="completed_with_errors">С ошибками</option>
+            <option value="failed">Ошибка</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-auto text-secondary">
+          Обновление каждые 2 секунды
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ID задачи</th>
+              <th>Статус</th>
+              <th>Прогресс</th>
+              <th>Создана</th>
+              <th>Завершена</th>
+              <th>Ошибки</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let task of tasks$ | async">
+              <td><code>{{ task.id }}</code></td>
+              <td><span class="badge" [ngClass]="statusClass(task.status)">{{ statusLabel(task.status) }}</span></td>
+              <td class="min-w-200">
+                <div class="small mb-1">{{ task.processed }} / {{ task.total }}</div>
+                <div class="progress" role="progressbar">
+                  <div class="progress-bar" [style.width.%]="progress(task)">{{ progress(task) }}%</div>
+                </div>
+              </td>
+              <td>{{ task.created_at | date: "dd.MM.yyyy HH:mm:ss" }}</td>
+              <td>{{ task.finished_at ? (task.finished_at | date: "dd.MM.yyyy HH:mm:ss") : "-" }}</td>
+              <td>{{ hasErrors(task) ? "Есть" : "Нет" }}</td>
+            </tr>
+            <ng-container *ngFor="let task of tasks$ | async">
+              <tr *ngIf="hasErrors(task)" class="table-warning">
+                <td colspan="6" class="py-3">
+                  <details>
+                    <summary class="fw-semibold">Показать ошибки ({{ parseErrors(task).length }})</summary>
+                    <ul class="mb-0 mt-2 ps-3">
+                      <li *ngFor="let error of parseErrors(task)">
+                        <span *ngIf="error.row">Строка {{ error.row }}: </span>{{ error.message }}
+                      </li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-secondary mb-0" *ngIf="!(tasks$ | async)?.length">Задач пока нет.</p>
+    </div>
+  </section>
+</main>

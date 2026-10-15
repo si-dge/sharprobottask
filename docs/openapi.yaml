@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: API импорта товаров
+  description: API для импорта товаров из XLSX и просмотра каталога товаров.
+  version: 1.0.0
+  license:
+    name: Проприетарное ПО
+servers:
+  - url: http://localhost:8080
+    description: Локальный API
+
+tags:
+  - name: Состояние API
+  - name: База данных
+  - name: Товары
+  - name: Импорты
+  - name: Worker
+
+paths:
+  /api/health:
+    get:
+      tags: [Состояние API]
+      summary: Проверить состояние API
+      operationId: getHealth
+      responses:
+        '200':
+          description: API доступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/database/reset:
+    post:
+      tags: [База данных]
+      summary: Очистить данные перед новым импортом
+      description: Операция очищает настроенный топик Kafka и удаляет данные товаров, изображений, атрибутов и импортов. Таблицы и их структура сохраняются.
+      operationId: resetDatabase
+      responses:
+        '200':
+          description: Данные базы очищены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseResetResponse'
+        '500':
+          description: Не удалось очистить базу данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Очередь Kafka недоступна или не может быть пересоздана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/products:
+    get:
+      tags: [Товары]
+      summary: Получить постраничный список товаров
+      operationId: listProducts
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: name
+          in: query
+          description: Поиск по части названия товара без учета регистра
+          required: false
+          schema:
+            type: string
+            example: laptop
+        - name: minPrice
+          in: query
+          description: Минимальная цена товара включительно
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: 0
+            example: 100
+        - name: maxPrice
+          in: query
+          description: Максимальная цена товара включительно
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: 0
+            example: 1000
+      responses:
+        '200':
+          description: Постраничный список товаров
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+  /api/products/{id}:
+    get:
+      tags: [Товары]
+      summary: Получить товар по идентификатору
+      operationId: getProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Данные товара
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/imports:
+    post:
+      tags: [Импорты]
+      summary: Поставить импорт XLSX в очередь
+      description: Импорт обрабатывается асинхронным worker Kafka. Используйте возвращенный идентификатор импорта, чтобы отслеживать прогресс и ошибки.
+      operationId: createImport
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Файл XLSX для импорта
+      responses:
+        '202':
+          description: Импорт принят и поставлен в очередь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportQueuedResponse'
+        '422':
+          description: Файл отсутствует, превышает установленный размер или содержит ошибку загрузки, недопустимый MIME-тип или расширение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Очередь Kafka недоступна
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/imports/{id}:
+    get:
+      tags: [Импорты]
+      summary: Получить статус импорта
+      operationId: getImportStatus
+      parameters:
+        - $ref: '#/components/parameters/ImportId'
+      responses:
+        '200':
+          description: Текущий статус и прогресс импорта
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/worker/tasks:
+    get:
+      tags: [Worker]
+      summary: Получить задания импорта worker
+      description: Возвращает последние асинхронные задания импорта и прогресс их обработки.
+      operationId: listWorkerTasks
+      parameters:
+        - $ref: '#/components/parameters/TaskLimit'
+      responses:
+        '200':
+          description: Список заданий worker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerTaskListResponse'
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Номер страницы
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+        example: 1
+    Limit:
+      name: limit
+      in: query
+      description: Количество товаров на странице
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+        example: 20
+    ProductId:
+      name: id
+      in: path
+      required: true
+      description: UUID товара
+      schema:
+        type: string
+        format: uuid
+    ImportId:
+      name: id
+      in: path
+      required: true
+      description: UUID импорта
+      schema:
+        type: string
+        format: uuid
+    TaskLimit:
+      name: limit
+      in: query
+      description: Максимальное количество последних заданий worker
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+        example: 50
+
+  responses:
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: ok
+
+    DatabaseResetResponse:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          example: ok
+        message:
+          type: string
+          example: Очередь Kafka и данные базы очищены
+
+    Product:
+      type: object
+      required: [id, external_code, name, description, price, discount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_code:
+          type: string
+          example: SKU-001
+        name:
+          type: string
+          example: Laptop Pro
+        description:
+          type: string
+          example: 14-inch business laptop
+        price:
+          type: number
+          format: double
+          example: 1299.99
+        discount:
+          type: number
+          format: double
+          description: Процент скидки, рассчитанный по цене продажи и закупочной цене
+          example: 12.5
+
+    ProductAttribute:
+      type: object
+      required: [id, product_id, key, value]
+      properties:
+        id:
+          type: integer
+          format: int64
+        product_id:
+          type: string
+          format: uuid
+        key:
+          type: string
+          example: "Доп. поле: Цвет"
+        value:
+          type: string
+          example: Черный
+
+    ProductImage:
+      type: object
+      required: [id, product_id, url, path]
+      properties:
+        id:
+          type: integer
+          format: int64
+        product_id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+          example: https://cdn.example.com/product.jpg
+        path:
+          type: string
+          example: /var/www/uploads/product.jpg
+
+    ProductDetails:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          required: [attributes, images]
+          properties:
+            attributes:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductAttribute'
+            images:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductImage'
+
+    ProductListResponse:
+      type: object
+      required: [items, page, limit, total, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 3
+
+    ImportQueuedResponse:
+      type: object
+      required: [importId, status]
+      properties:
+        importId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued]
+          example: queued
+
+    ImportError:
+      type: object
+      required: [row, message]
+      properties:
+        row:
+          type: integer
+          example: 4
+        message:
+          type: string
+          example: Внешний код и Наименование обязательны
+
+    ImportStatus:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, processing, completed, completed_with_errors, failed]
+          example: processing
+        total:
+          type: integer
+          nullable: true
+          example: 100
+        processed:
+          type: integer
+          nullable: true
+          example: 45
+        errors:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ImportError'
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    WorkerTaskListResponse:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportStatus'
+        total:
+          type: integer
+          example: 12
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: Товар не найден

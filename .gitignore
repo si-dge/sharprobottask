@@ -1,0 +1,32 @@
+.env
+# Local environment files
+backend/.env
+.env.local
+.env.*.local
+
+# PHP and Composer
+backend/vendor/
+.phpunit.cache/
+coverage/
+
+# Node, Angular and build output
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.cache/
+npm-debug.log*
+
+# Docker and application logs
+*.log
+docker-compose.override.yml
+
+# Editors and operating system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Temporary office files
+.~lock.*#

@@ -1,0 +1,122 @@
+# Импорт товаров
+
+Slim API + Angular frontend для импорта товаров из XLSX, просмотра каталога и обработки заданий через Kafka.
+
+## Требования
+
+- Docker Engine
+- Docker Compose v2
+
+Проверка установки:
+
+```bash
+docker --version
+docker compose version
+```
+
+## Сборка и запуск
+
+Из корня проекта:
+
+```bash
+docker compose up --build -d
+```
+
+После запуска:
+
+- frontend и API через nginx: http://localhost
+- API напрямую: http://localhost:8080
+- проверка API: http://localhost/api/health
+- Swagger UI: http://localhost/docs/swagger.html
+
+Проверить состояние контейнеров:
+
+```bash
+docker compose ps
+docker compose logs -f app worker
+```
+
+Остановить приложение:
+
+```bash
+docker compose down
+```
+
+Остановить приложение и удалить данные PostgreSQL:
+
+```bash
+docker compose down -v
+```
+
+## Основные страницы
+
+- Каталог товаров: http://localhost/products
+- Импорт XLSX: http://localhost/import
+- Задания worker: http://localhost/worker-tasks
+
+## API
+
+- `GET /api/health` - проверка API
+- `GET /api/products` - список товаров
+- `GET /api/products/{id}` - карточка товара
+- `POST /api/imports` - загрузка XLSX в очередь импорта
+- `GET /api/imports/{id}` - статус импорта
+- `GET /api/worker/tasks` - список заданий worker
+- `POST /api/database/reset` - очистка товаров и заданий
+
+Пример проверки:
+
+```bash
+curl http://localhost/api/health
+curl 'http://localhost:8080/api/products?page=1&limit=20'
+```
+
+## Swagger / OpenAPI
+
+Спецификация API находится в [docs/openapi.yaml](docs/openapi.yaml).
+
+В Docker Swagger UI доступен по адресу http://localhost/docs/swagger.html.
+Каталог документации защищен Basic Auth: логин `admin`, пароль `admin`.
+Спецификация загружается из http://localhost/docs/openapi.yaml.
+
+Открыть спецификацию в Swagger Editor:
+
+https://editor.swagger.io/
+
+В Swagger Editor выберите **File > Import File** и укажите `docs/openapi.yaml`.
+
+Проверить OpenAPI-файл:
+
+```bash
+docker run --rm -v "$PWD/docs:/spec:ro" \
+  swaggerapi/swagger-cli validate /spec/openapi.yaml
+```
+
+## Локальная разработка frontend
+
+```bash
+cd frontend
+npm install
+npm start -- --port 4200
+```
+
+Frontend будет доступен по адресу http://localhost:4200. Dev server проксирует `/api` на `http://localhost:8080`.
+В режиме разработки Swagger UI доступен по адресу http://localhost:4200/docs/swagger.html.
+Для загрузки данных frontend API должен быть запущен на `http://localhost:8080`.
+
+Сборка frontend:
+
+```bash
+cd frontend
+npm run build
+```
+
+## Локальная разработка backend
+
+```bash
+cd backend
+composer install
+php -S 0.0.0.0:8080 -t public
+```
+
+Для полноценного запуска backend нужны PostgreSQL и Kafka. Проще запускать зависимости через Docker Compose.

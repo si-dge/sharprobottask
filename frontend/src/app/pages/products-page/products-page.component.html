@@ -1,0 +1,49 @@
+<main class="container py-4">
+  <section class="p-4 mb-4 bg-dark text-white rounded-3">
+    <h1 class="display-6 mb-2">Список товаров</h1>
+    <p class="lead mb-0">Поиск и фильтрация импортированных товаров.</p>
+  </section>
+  <section class="card shadow-sm">
+    <div class="card-body">
+      <div class="row g-3 align-items-end mb-4">
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="product-name">Название</label>
+          <input id="product-name" class="form-control" [(ngModel)]="name" placeholder="Поиск по названию" />
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label" for="min-price">Цена от</label>
+          <input id="min-price" class="form-control" type="number" [(ngModel)]="minPrice" />
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label" for="max-price">Цена до</label>
+          <input id="max-price" class="form-control" type="number" [(ngModel)]="maxPrice" />
+        </div>
+        <div class="col-12 col-md-2">
+          <button class="btn btn-primary w-100" (click)="load()">Найти</button>
+        </div>
+      </div>
+      <div class="alert alert-danger" role="alert" *ngIf="error$ | async as error">{{ error }}</div>
+      <div class="text-secondary" *ngIf="loading$ | async">Загрузка товаров...</div>
+      <div class="table-responsive" *ngIf="!(loading$ | async)">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr><th scope="col">Код</th><th scope="col">Название</th><th scope="col">Цена</th><th scope="col">Скидка</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let product of products$ | async">
+              <td>{{ product.external_code }}</td>
+              <td><a class="link-primary" [routerLink]="['/products', product.id]">{{ product.name }}</a></td>
+              <td>{{ product.price | number: "1.2-2" }}</td>
+              <td>{{ product.discount }}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-secondary" *ngIf="!(products$ | async)?.length && !(loading$ | async)">Товаров пока нет.</p>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" *ngIf="page > 1" (click)="page = page - 1; load()">Назад</button>
+        <button class="btn btn-outline-primary" *ngIf="page < ((totalPages$ | async) || 1)" (click)="page = page + 1; load()">Далее</button>
+      </div>
+    </div>
+  </section>
+</main>

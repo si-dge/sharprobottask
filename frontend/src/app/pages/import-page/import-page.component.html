@@ -1,0 +1,32 @@
+<main class="container py-4">
+  <section class="p-4 mb-4 bg-dark text-white rounded-3">
+    <h1 class="display-6 mb-2">Импорт товаров</h1>
+    <p class="lead mb-0">Загрузите XLSX-файл и отслеживайте обработку.</p>
+  </section>
+  <section class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h4 card-title">Загрузка файла</h2>
+      <input class="form-control mb-3" type="file" accept=".xlsx" (change)="choose($event)" />
+      <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-primary" [disabled]="!file || uploading || resetting" (click)="upload()">
+          {{ uploading ? "Загрузка..." : "Запустить импорт" }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          [disabled]="resetting || uploading"
+          (click)="resetDatabase()"
+        >
+          {{ resetting ? "Очистка..." : "Очистить БД" }}
+        </button>
+      </div>
+      <p class="text-secondary mt-3 mb-2" *ngIf="message">{{ message }}</p>
+      <div class="alert alert-danger mt-3 mb-0" role="alert" *ngFor="let error of errors">
+        Строка {{ error.row }}: {{ error.message }}
+      </div>
+      <div class="progress mt-3" role="progressbar" *ngIf="progress >= 0">
+        <div class="progress-bar" [style.width.%]="progress">{{ progress }}%</div>
+      </div>
+    </div>
+  </section>
+</main>
