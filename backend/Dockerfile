@@ -8,7 +8,7 @@ FROM php:8.3-cli-alpine
 RUN apk add --no-cache $PHPIZE_DEPS curl postgresql-dev libzip-dev oniguruma-dev icu-dev libxml2-dev \
         librdkafka-dev libpng-dev libjpeg-turbo-dev freetype-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_pgsql intl zip gd \
+    && docker-php-ext-install pdo_pgsql intl zip gd curl \
     && pecl install rdkafka \
     && docker-php-ext-enable rdkafka
 WORKDIR /app

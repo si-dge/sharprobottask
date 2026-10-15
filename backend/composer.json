@@ -3,6 +3,7 @@
     "php": ">=8.2",
     "ext-pdo": "*",
     "ext-pdo_pgsql": "*",
+    "ext-curl": "*",
     "slim/slim": "^4.14",
     "slim/psr7": "^1.7",
     "php-di/php-di": "^7.0",

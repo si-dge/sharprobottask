@@ -70,19 +70,22 @@ final class ProductImportService
 
     private function downloadImages(array $data, string $productId): array
     {
-        $images = [];
+        $urls = [];
         foreach ($data as $key => $value) {
             if (!$this->isImageColumn($key) || trim((string) $value) === '') {
                 continue;
             }
             foreach (preg_split('/[,;\r\n]+/', (string) $value, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $url) {
-                $url = trim($url);
-                $images[] = [
-                    'url' => $url,
-                    'path' => $this->imageDownloader->download($url, $productId),
-                ];
+                $urls[] = trim($url);
             }
         }
+
+        $paths = $this->imageDownloader->downloadMany($urls, $productId);
+        $images = [];
+        foreach ($urls as $index => $url) {
+            $images[] = ['url' => $url, 'path' => $paths[$index]];
+        }
+
         return $images;
     }
 
