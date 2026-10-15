@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Action;
@@ -10,9 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class LoginAction
 {
     /** @param array{jwt_secret: string, jwt_issuer: string, username: string, password: string} $auth */
-    public function __construct(private array $auth)
-    {
-    }
+    public function __construct(private array $auth) {}
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {

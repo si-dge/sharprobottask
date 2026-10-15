@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 require __DIR__ . '/vendor/autoload.php';
 use App\Domain\XlsxImportService;
@@ -20,14 +21,14 @@ $consumer = new KafkaConsumer($config);
 $consumer->subscribe([getenv('KAFKA_TOPIC') ?: 'imports']);
 
 while (true) {
-  $message = $consumer->consume(120000);
+    $message = $consumer->consume(120000);
 
-  if ($message->err !== RD_KAFKA_RESP_ERR_NO_ERROR) {
-    continue;
-  }
+    if ($message->err !== RD_KAFKA_RESP_ERR_NO_ERROR) {
+        continue;
+    }
 
-  $job = json_decode($message->payload, true, flags: JSON_THROW_ON_ERROR);
-  $importService->import((string) $job['id'], (string) $job['file']);
+    $job = json_decode($message->payload, true, flags: JSON_THROW_ON_ERROR);
+    $importService->import((string) $job['id'], (string) $job['file']);
 
-  $consumer->commit($message);
+    $consumer->commit($message);
 }

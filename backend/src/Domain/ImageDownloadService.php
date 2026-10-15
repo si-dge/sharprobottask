@@ -1,13 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Domain;
 
 final class ImageDownloadService
 {
-    public function __construct(private string $directory)
-    {
-    }
+    public function __construct(private string $directory) {}
 
     public function download(string $url, string $productId): string
     {

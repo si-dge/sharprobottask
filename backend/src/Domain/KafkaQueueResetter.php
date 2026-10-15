@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Domain;
@@ -12,8 +13,7 @@ final class KafkaQueueResetter
     public function __construct(
         private string $brokers,
         private string $topicName,
-    ) {
-    }
+    ) {}
 
     public function reset(): void
     {
@@ -67,6 +67,6 @@ final class KafkaQueueResetter
             return;
         }
 
-        throw $lastException ?? new \RuntimeException('Unable to reset Kafka queue');
+        throw $lastException;
     }
 }

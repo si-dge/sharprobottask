@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Entity;
@@ -53,5 +54,20 @@ class Product
     public function getId(): string
     {
         return $this->id;
+    }
+
+    public function setDescription(string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function setPrice(string $price): void
+    {
+        $this->price = $price;
+    }
+
+    public function setDiscount(string $discount): void
+    {
+        $this->discount = $discount;
     }
 }

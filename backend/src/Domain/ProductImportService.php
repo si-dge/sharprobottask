@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Domain;
@@ -12,8 +13,7 @@ final class ProductImportService
         private PDO $pdo,
         private ProductImportRepository $repository,
         private ImageDownloadService $imageDownloader,
-    ) {
-    }
+    ) {}
 
     public function importRow(array $data): void
     {
@@ -25,7 +25,7 @@ final class ProductImportService
 
         $uuid = trim((string) ($data['UUID'] ?? ''));
         if ($uuid !== '' && preg_match(
-                '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i',
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i',
             $uuid,
         ) !== 1) {
             throw new \RuntimeException('UUID имеет некорректный формат');

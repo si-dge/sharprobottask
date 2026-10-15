@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Domain;
@@ -13,8 +14,7 @@ final class ImportService
         private array $kafka,
         private string $directory,
         private int $maxFileSize,
-    ) {
-    }
+    ) {}
 
     public function queue(?array $uploaded): array
     {

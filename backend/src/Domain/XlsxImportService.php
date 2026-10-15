@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Domain;
@@ -11,8 +12,7 @@ final class XlsxImportService
     public function __construct(
         private ImportRepository $imports,
         private ProductImportService $products,
-    ) {
-    }
+    ) {}
 
     public function import(string $importId, string $filePath): void
     {

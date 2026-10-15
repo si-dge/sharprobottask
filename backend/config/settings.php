@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use Dotenv\Dotenv;
@@ -11,7 +12,7 @@ if (is_file($projectDirectory . '/.env')) {
 $env = static function (string $name, mixed $default = null): mixed {
     $value = $_ENV[$name] ?? $_SERVER[$name] ?? getenv($name);
 
-    return $value === false || $value === null || $value === '' ? $default : $value;
+    return $value === false || $value === '' ? $default : $value;
 };
 
 $dbDsn = (string) $env('DB_DSN', 'pgsql:host=localhost;port=5432;dbname=products');

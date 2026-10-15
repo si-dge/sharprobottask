@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Action;
@@ -13,9 +14,7 @@ final class ResetDatabaseAction
     public function __construct(
         private DatabaseResetRepository $repository,
         private KafkaQueueResetter $queueResetter,
-    )
-    {
-    }
+    ) {}
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {

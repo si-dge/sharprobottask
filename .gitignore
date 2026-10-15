@@ -6,6 +6,7 @@ backend/.env
 
 # PHP and Composer
 backend/vendor/
+backend/.php-cs-fixer.cache
 .phpunit.cache/
 coverage/
 

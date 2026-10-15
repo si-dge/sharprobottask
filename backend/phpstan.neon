@@ -1,0 +1,19 @@
+parameters:
+    level: 5
+    paths:
+        - src
+        - config
+        - public
+        - bin
+        - worker.php
+    reportUnmatchedIgnoredErrors: true
+    ignoreErrors:
+        -
+            identifier: property.onlyWritten
+            path: src/Entity/*
+        -
+            identifier: property.onlyRead
+            path: src/Entity/*
+        -
+            identifier: while.alwaysTrue
+            path: worker.php

@@ -127,3 +127,14 @@ php -S 0.0.0.0:8080 -t public
 ```
 
 Для полноценного запуска backend нужны PostgreSQL и Kafka. Проще запускать зависимости через Docker Compose.
+
+## Тестовые данные
+
+После применения схемы PostgreSQL можно заполнить демонстрационными товарами, атрибутами и изображениями:
+
+```bash
+cd backend
+composer db:seed
+```
+
+Doctrine fixture находится в `backend/database/fixtures/ProductsFixture.php`, использует настройки `DB_DSN`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` и `DB_PASSWORD` и при повторном запуске пересоздает данные трех таблиц товаров.

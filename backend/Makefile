@@ -2,10 +2,18 @@ install:
 	composer install
 migrate:
 	psql "$(DB_DSN)" -f database/schema.sql
+seed:
+	composer db:seed
 orm-schema:
 	php bin/doctrine-schema.php
 test:
 	composer test -- --exclude-group api
+analyse:
+	composer analyse
+cs-check:
+	composer cs-check
+cs-fix:
+	composer cs-fix
 test-api:
 	docker compose -f ../docker-compose.yml stop worker && \
 	curl --fail --silent --show-error -X POST $(or $(IMPORT_API_URL),http://localhost:8080/api)/database/reset && \
